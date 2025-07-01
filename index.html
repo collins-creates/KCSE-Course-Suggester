@@ -240,6 +240,9 @@
     </form>
     <div class="results" id="results" style="display:none;"></div>
   </div>
+  <footer style="text-align:center; margin-top:32px; margin-bottom:10px; color:#6c7a89; font-size:1rem;">
+    Powered by <a href="https://github.com/collins-creates" target="_blank" style="color:#3a5ad7; text-decoration:none; font-weight:500;">Collins</a>
+  </footer>
   <script>
     // KCSE grades from best to worst
     const grades = [
@@ -275,27 +278,124 @@
 
     // Define courses with required subjects and minimum grades
     const courses = [
+      // --- DEGREE PROGRAMMES ---
+      {
+        name: 'Bachelor of Medicine & Surgery',
+        required: [
+          { subjects: ['biology'], min: 'B' },
+          { subjects: ['chemistry'], min: 'B' },
+          { subjects: ['math', 'physics'], min: 'C+', either: true },
+          { subjects: ['english', 'kiswahili', 'ksl'], min: 'B', either: true }
+        ]
+      },
       {
         name: 'Bachelor of Laws (LL.B.)',
         required: [
-          { subjects: ['english', 'kiswahili'], min: 'B', either: true }
+          { subjects: ['english', 'kiswahili', 'ksl'], min: 'B', either: true }
+        ]
+      },
+      {
+        name: 'Bachelor of Science in Computer Science',
+        required: [
+          { subjects: ['math'], min: 'C+' },
+          { subjects: ['physics'], min: 'C' }
         ]
       },
       {
         name: 'Bachelor of Commerce',
         required: [
           { subjects: ['math'], min: 'C' },
-          { subjects: ['english', 'kiswahili'], min: 'C+', either: true }
+          { subjects: ['english', 'kiswahili', 'ksl'], min: 'C+', either: true }
         ]
       },
       {
-        name: 'Bachelor of Science (Computer Science)',
+        name: 'Bachelor of Education (Arts)',
         required: [
-          { subjects: ['math'], min: 'C+' },
-          { subjects: ['physics'], min: 'C' }
+          { subjects: ['english', 'kiswahili', 'ksl'], min: 'C+', either: true },
+          { subjects: ['math'], min: 'D+' }
+        ]
+      },
+      {
+        name: 'Bachelor of Science (Nursing)',
+        required: [
+          { subjects: ['biology'], min: 'B' },
+          { subjects: ['chemistry'], min: 'C+' },
+          { subjects: ['math'], min: 'C+' }
+        ]
+      },
+      {
+        name: 'Bachelor of Science in Agriculture',
+        required: [
+          { subjects: ['biology', 'agriculture'], min: 'C+', either: true },
+          { subjects: ['chemistry'], min: 'C' },
+          { subjects: ['math'], min: 'C' }
+        ]
+      },
+      {
+        name: 'Bachelor of Science in Hospitality Management',
+        required: [
+          { subjects: ['math'], min: 'C-' },
+          { subjects: ['english', 'kiswahili', 'ksl'], min: 'C', either: true }
         ]
       },
       // --- DIPLOMA PROGRAMMES ---
+      {
+        name: 'Diploma in Business Management',
+        required: [],
+        mean: 'C'
+      },
+      {
+        name: 'Diploma in Information Technology',
+        required: [
+          { subjects: ['math'], min: 'C-' }
+        ],
+        mean: 'C-'
+      },
+      {
+        name: 'Diploma in Nursing',
+        required: [
+          { subjects: ['biology'], min: 'C' },
+          { subjects: ['english', 'kiswahili', 'ksl'], min: 'C', either: true }
+        ],
+        mean: 'C'
+      },
+      {
+        name: 'Diploma in Social Work',
+        required: [
+          { subjects: ['english', 'kiswahili', 'ksl'], min: 'C', either: true }
+        ],
+        mean: 'C'
+      },
+      {
+        name: 'Diploma in Hospitality Management',
+        required: [],
+        mean: 'C-'
+      },
+      // --- CERTIFICATE PROGRAMMES ---
+      {
+        name: 'Certificate in Information Technology',
+        required: [],
+        mean: 'D+'
+      },
+      {
+        name: 'Certificate in Business Administration',
+        required: [],
+        mean: 'D+'
+      },
+      {
+        name: 'Certificate in Social Work',
+        required: [
+          { subjects: ['english', 'kiswahili', 'ksl'], min: 'D+', either: true }
+        ],
+        mean: 'D+'
+      },
+      {
+        name: 'Certificate in Agriculture',
+        required: [
+          { subjects: ['biology', 'agriculture'], min: 'D+', either: true }
+        ],
+        mean: 'D+'
+      },
       // ENGINEERING
       {
         name: 'Diploma in Aeronautical Engineering',
@@ -346,17 +446,7 @@
         required: [],
         mean: 'C'
       },
-      {
-        name: 'Diploma in Information Technology',
-        required: [],
-        mean: 'C'
-      },
       // BUSINESS
-      {
-        name: 'Diploma in Business Administration',
-        required: [],
-        mean: 'C'
-      },
       {
         name: 'Diploma in Human Resource Management',
         required: [],
