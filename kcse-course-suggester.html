@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KCSE Course Suggester</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6fb;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 24px auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+      padding: 18px 12px 18px 12px;
+    }
+    h1 {
+      text-align: center;
+      color: #2a3d66;
+      margin-bottom: 18px;
+      font-size: 2rem;
+    }
+    form label {
+      color: #2a3d66;
+      font-weight: 500;
+    }
+    .subjects-section {
+      margin-bottom: 8px;
+      padding: 0;
+      border-radius: 8px;
+      background: #f7f9fc;
+      border: 1px solid #e3eafc;
+    }
+    .subjects-title {
+      font-size: 1.08rem;
+      font-weight: 600;
+      color: #1a2540;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      padding: 10px 8px;
+      border-radius: 8px 8px 0 0;
+      background: #f0f4fa;
+      user-select: none;
+    }
+    .subjects-title.active {
+      background: #e3eafc;
+    }
+    .subject-required {
+      color: #e67c0c;
+      font-size: 1.1em;
+      margin-left: 2px;
+    }
+    .subject-item label {
+      margin-left: 7px;
+      font-size: 1rem;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .subject-tooltip {
+      margin-left: 4px;
+      color: #888;
+      cursor: pointer;
+      font-size: 1.1em;
+      position: relative;
+    }
+    .subject-tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 20px;
+      top: 0;
+      background: #fffbe7;
+      color: #222;
+      border: 1px solid #e3eafc;
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 0.98em;
+      white-space: pre-line;
+      z-index: 10;
+      min-width: 120px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .subjects-grid {
+      display: none;
+      padding: 8px 8px 2px 8px;
+    }
+    .subjects-grid.active {
+      display: grid;
+    }
+    .subject-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2px;
+      padding: 4px 0;
+    }
+    .subject-item select {
+      width: 110px;
+      margin-left: 10px;
+      padding: 4px 6px;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: none;
+      background: #2a3d66;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    button:hover {
+      background: #1a2540;
+    }
+    .results {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 100;
+      margin: 0 auto;
+      max-width: 600px;
+      background: #e3eafc;
+      border-radius: 10px 10px 0 0;
+      font-size: 1.08rem;
+      border: 1px solid #cfd8dc;
+      box-shadow: 0 -2px 12px rgba(58,90,215,0.08);
+      padding: 16px 12px 24px 12px;
+      transition: box-shadow 0.2s;
+    }
+    .results:empty {
+      display: none !important;
+    }
+    .course {
+      margin-bottom: 12px;
+      padding: 10px 8px;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      font-size: 1.04rem;
+    }
+    .no-match {
+      color: #b71c1c;
+      font-weight: bold;
+    }
+    .summary {
+      margin: 10px 0 6px 0;
+      padding: 8px 10px;
+      background: #f7f9fc;
+      border-radius: 8px;
+      border: 1px solid #e3eafc;
+      font-size: 1.01rem;
+      display: none;
+    }
+    .spinner {
+      display: none;
+      margin: 38px auto 0 auto;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 6px solid #e3eafc;
+      border-top: 6px solid #3a5ad7;
+      border-right: 6px solid #5e8fff;
+      border-bottom: 6px solid #e3eafc;
+      border-left: 6px solid #e3eafc;
+      box-shadow: 0 4px 18px rgba(58,90,215,0.10);
+      animation: spin 0.8s linear infinite;
+      position: relative;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .spinner-message {
+      display: none;
+      text-align: center;
+      color: #3a5ad7;
+      font-size: 1.13rem;
+      font-weight: 500;
+      margin-top: 12px;
+      letter-spacing: 0.01em;
+    }
+    .back-to-top {
+      position: fixed;
+      right: 24px;
+      bottom: 90px;
+      z-index: 200;
+      background: #2a3d66;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 1.5rem;
+      box-shadow: 0 2px 8px rgba(58,90,215,0.13);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .back-to-top:hover {
+      background: #1a2540;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 10px 2vw;
+      }
+      .subjects-grid {
+        grid-template-columns: 1fr;
+      }
+      .subjects-section {
+        padding: 10px 4px 6px 4px;
+      }
+      .summary {
+        font-size: 0.98rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>KCSE Course Suggester</h1>
+    <form id="gradesForm">
+      <div id="subjects-list"></div>
+      <button type="submit" id="suggestBtn" style="display:none;">Suggest Courses</button>
+    </form>
+    <div class="results" id="results" style="display:none;"></div>
+  </div>
+  <script>
+    // KCSE grades from best to worst
+    const grades = [
+      'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'
+    ];
+
+    // Helper: grade to numeric value (A=12, E=1)
+    function gradeValue(g) {
+      return 12 - grades.indexOf(g);
+    }
+
+    // Helper: get best N subjects (by points)
+    function bestSubjects(studentGrades, excludeKeys, n) {
+      const entries = Object.entries(studentGrades)
+        .filter(([k]) => !excludeKeys.includes(k))
+        .map(([k, v]) => ({ subject: k, value: gradeValue(v) }));
+      entries.sort((a, b) => b.value - a.value);
+      return entries.slice(0, n);
+    }
+
+    // Helper arrays for subject groups
+    const GROUP_II = ['biology', 'physics', 'chemistry'];
+    const GROUP_III = ['history', 'cre', 'ire', 'hre', 'geography'];
+    const GROUP_IV = ['home_science', 'art', 'agriculture', 'aviation', 'computer', 'woodwork', 'metalwork', 'building', 'power', 'electricity', 'drawing'];
+    const GROUP_V = ['french', 'german', 'music'];
+
+    function bestGrade(subjects, studentGrades) {
+      return Math.max(...subjects.map(s => gradeValue(studentGrades[s])));
+    }
+    function countAtLeast(subjects, studentGrades, minGrade) {
+      return subjects.filter(s => gradeValue(studentGrades[s]) >= gradeValue(minGrade)).length;
+    }
+
+    // Define courses with required subjects and minimum grades
+    const courses = [
+      {
+        name: 'Bachelor of Laws (LL.B.)',
+        required: [
+          { subjects: ['english', 'kiswahili'], min: 'B', either: true }
+        ]
+      },
+      {
+        name: 'Bachelor of Commerce',
+        required: [
+          { subjects: ['math'], min: 'C' },
+          { subjects: ['english', 'kiswahili'], min: 'C+', either: true }
+        ]
+      },
+      {
+        name: 'Bachelor of Science (Computer Science)',
+        required: [
+          { subjects: ['math'], min: 'C+' },
+          { subjects: ['physics'], min: 'C' }
+        ]
+      },
+      // --- DIPLOMA PROGRAMMES ---
+      // ENGINEERING
+      {
+        name: 'Diploma in Aeronautical Engineering',
+        required: [
+          { subjects: ['math', 'physics'], min: 'C', either: false },
+          { subjects: ['english'], min: 'C', either: false }
+        ],
+        mean: 'C'
+      },
+      {
+        name: 'Diploma in Mechanical Engineering',
+        required: [
+          { subjects: ['math', 'physics'], min: 'C', either: false },
+          { subjects: ['english'], min: 'C', either: false }
+        ],
+        mean: 'C'
+      },
+      {
+        name: 'Diploma in Electrical & Electronics Engineering',
+        required: [
+          { subjects: ['math', 'physics'], min: 'C', either: false },
+          { subjects: ['english'], min: 'C', either: false }
+        ],
+        mean: 'C'
+      },
+      // TECHNICAL
+      {
+        name: 'Diploma in Land Surveying',
+        required: [
+          { subjects: ['math'], min: 'C', either: false },
+          { subjects: ['physics'], min: 'C', either: false },
+          { subjects: ['english'], min: 'C', either: false }
+        ],
+        mean: 'C'
+      },
+      {
+        name: 'Diploma in Quantity Surveying',
+        required: [
+          { subjects: ['math'], min: 'C', either: false },
+          { subjects: ['physics'], min: 'C', either: false },
+          { subjects: ['english', 'kiswahili'], min: 'C', either: true }
+        ],
+        mean: 'C'
+      },
+      // COMPUTING
+      {
+        name: 'Diploma in Business Information Technology',
+        required: [],
+        mean: 'C'
+      },
+      {
+        name: 'Diploma in Information Technology',
+        required: [],
+        mean: 'C'
+      },
+      // BUSINESS
+      {
+        name: 'Diploma in Business Administration',
+        required: [],
+        mean: 'C'
+      },
+      {
+        name: 'Diploma in Human Resource Management',
+        required: [],
+        mean: 'C'
+      },
+      // TOURISM AND HOTEL MANAGEMENT
+      {
+        name: 'Diploma in Food & Beverage',
+        required: [],
+        mean: 'C'
+      },
+      {
+        name: 'Diploma in Hotel and Institutional Management',
+        required: [],
+        mean: 'C'
+      },
+      // CLOTH AND TEXTILE
+      {
+        name: 'Diploma in Fashion Design & Clothing Technology',
+        required: [],
+        mean: 'C'
+      },
+      // HEALTH SCIENCES
+      {
+        name: 'Diploma in Environmental Health Sciences',
+        required: [
+          { subjects: ['english', 'kiswahili'], min: 'C', either: true },
+          { subjects: ['biology'], min: 'C', either: false },
+          { subjects: ['math'], min: 'C', either: false },
+          { subjects: ['physics', 'chemistry'], min: 'C', either: true }
+        ],
+        mean: 'C'
+      },
+      {
+        name: 'Diploma in Medical Laboratory Technology',
+        required: [
+          { subjects: ['english', 'kiswahili'], min: 'C', either: true },
+          { subjects: ['math', 'physics'], min: 'C', either: true },
+          { subjects: ['chemistry'], min: 'C', either: false },
+          { subjects: ['biology'], min: 'C', either: false }
+        ],
+        mean: 'C'
+      },
+      // ... Add more courses here, following the same pattern ...
+    ];
+
+    // List of all KCSE subjects
+    const allSubjects = [
+      { id: 'english', label: 'English' },
+      { id: 'kiswahili', label: 'Kiswahili' },
+      { id: 'math', label: 'Mathematics' },
+      { id: 'biology', label: 'Biology' },
+      { id: 'chemistry', label: 'Chemistry' },
+      { id: 'physics', label: 'Physics' },
+      { id: 'geography', label: 'Geography' },
+      { id: 'history', label: 'History' },
+      { id: 'cre', label: 'CRE (Christian Religious Education)' },
+      { id: 'ire', label: 'IRE (Islamic Religious Education)' },
+      { id: 'hre', label: 'HRE (Hindu Religious Education)' },
+      { id: 'french', label: 'French' },
+      { id: 'german', label: 'German' },
+      { id: 'music', label: 'Music' },
+      { id: 'agriculture', label: 'Agriculture' },
+      { id: 'home_science', label: 'Home Science' },
+      { id: 'art', label: 'Art & Design' },
+      { id: 'computer', label: 'Computer Studies' },
+      { id: 'business', label: 'Business Studies' },
+      { id: 'aviation', label: 'Aviation' },
+      { id: 'woodwork', label: 'Woodwork' },
+      { id: 'metalwork', label: 'Metalwork' },
+      { id: 'building', label: 'Building Construction' },
+      { id: 'power', label: 'Power Mechanics' },
+      { id: 'electricity', label: 'Electricity' },
+      { id: 'drawing', label: 'Drawing & Design' }
+    ];
+
+    window.onload = function() {
+      // Grouped subjects with icons and tooltips
+      window.groupedSubjects = [
+        {
+          title: 'Languages',
+          icon: '🗣️',
+          tooltip: 'English, Kiswahili, Kenyan Sign Language, and foreign languages',
+          subjects: [
+            { id: 'english', label: 'English' },
+            { id: 'kiswahili', label: 'Kiswahili' },
+            { id: 'ksl', label: 'Kenyan Sign Language (KSL)' },
+            { id: 'french', label: 'French' },
+            { id: 'german', label: 'German' }
+          ]
+        },
+        {
+          title: 'Sciences',
+          icon: '🔬',
+          tooltip: 'Mathematics, sciences, and applied sciences',
+          subjects: [
+            { id: 'math', label: 'Mathematics' },
+            { id: 'biology', label: 'Biology' },
+            { id: 'chemistry', label: 'Chemistry' },
+            { id: 'physics', label: 'Physics' },
+            { id: 'agriculture', label: 'Agriculture' },
+            { id: 'home_science', label: 'Home Science' }
+          ]
+        },
+        {
+          title: 'Humanities',
+          icon: '📚',
+          tooltip: 'Geography, History, and Religious Education',
+          subjects: [
+            { id: 'geography', label: 'Geography' },
+            { id: 'history', label: 'History' },
+            { id: 'cre', label: 'CRE (Christian Religious Education)' },
+            { id: 'ire', label: 'IRE (Islamic Religious Education)' },
+            { id: 'hre', label: 'HRE (Hindu Religious Education)' }
+          ]
+        },
+        {
+          title: 'Technical',
+          icon: '🛠️',
+          tooltip: 'Technical and creative subjects',
+          subjects: [
+            { id: 'computer', label: 'Computer Studies' },
+            { id: 'art', label: 'Art & Design' },
+            { id: 'aviation', label: 'Aviation' },
+            { id: 'woodwork', label: 'Woodwork' },
+            { id: 'metalwork', label: 'Metalwork' },
+            { id: 'building', label: 'Building Construction' },
+            { id: 'power', label: 'Power Mechanics' },
+            { id: 'electricity', label: 'Electricity' },
+            { id: 'drawing', label: 'Drawing & Design' }
+          ]
+        },
+        {
+          title: 'Others',
+          icon: '🎵',
+          tooltip: 'Music and Business Studies',
+          subjects: [
+            { id: 'music', label: 'Music' },
+            { id: 'business', label: 'Business Studies' }
+          ]
+        }
+      ];
+      // Required subjects for highlighting (example: English, Math, Kiswahili)
+      window.requiredSubjectIds = ['english', 'math', 'kiswahili'];
+      const subjectsListDiv = document.getElementById('subjects-list');
+      subjectsListDiv.innerHTML = '';
+      window.groupedSubjects.forEach((group, i) => {
+        const section = document.createElement('div');
+        section.className = 'subjects-section';
+        const title = document.createElement('div');
+        title.className = 'subjects-title';
+        title.innerHTML = `${group.icon} ${group.title}`;
+        if (group.tooltip) {
+          const info = document.createElement('span');
+          info.className = 'subject-tooltip';
+          info.textContent = 'ℹ️';
+          info.setAttribute('data-tooltip', group.tooltip);
+          title.appendChild(info);
+        }
+        section.appendChild(title);
+        const grid = document.createElement('div');
+        grid.className = 'subjects-grid';
+        group.subjects.forEach(subj => {
+          const item = document.createElement('div');
+          item.className = 'subject-item';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.id = `cb_${subj.id}`;
+          checkbox.name = `cb_${subj.id}`;
+          const label = document.createElement('label');
+          label.htmlFor = `cb_${subj.id}`;
+          label.textContent = subj.label;
+          // Highlight required subjects
+          if (window.requiredSubjectIds.includes(subj.id)) {
+            const star = document.createElement('span');
+            star.className = 'subject-required';
+            star.textContent = '★';
+            label.appendChild(star);
+          }
+          item.appendChild(checkbox);
+          item.appendChild(label);
+          const gradeSel = document.createElement('select');
+          gradeSel.id = `grade_${subj.id}`;
+          gradeSel.style.display = 'none';
+          gradeSel.innerHTML = '<option value="">Select grade</option>';
+          grades.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g;
+            opt.textContent = g;
+            gradeSel.appendChild(opt);
+          });
+          item.appendChild(gradeSel);
+          checkbox.addEventListener('change', function() {
+            gradeSel.style.display = this.checked ? 'inline-block' : 'none';
+            updateSummary();
+          });
+          gradeSel.addEventListener('change', updateSummary);
+          grid.appendChild(item);
+        });
+        section.appendChild(grid);
+        subjectsListDiv.appendChild(section);
+        // Collapsible logic
+        title.addEventListener('click', function() {
+          // Collapse all
+          document.querySelectorAll('.subjects-title').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.subjects-grid').forEach(g => g.classList.remove('active'));
+          // Expand this
+          title.classList.add('active');
+          grid.classList.add('active');
+        });
+        // Only first group open by default
+        if (i === 0) {
+          title.classList.add('active');
+          grid.classList.add('active');
+        }
+      });
+      // Add summary div
+      const summaryDiv = document.createElement('div');
+      summaryDiv.className = 'summary';
+      summaryDiv.id = 'summary';
+      subjectsListDiv.parentNode.insertBefore(summaryDiv, subjectsListDiv.nextSibling);
+      // Add spinner
+      const spinner = document.createElement('div');
+      spinner.className = 'spinner';
+      spinner.id = 'spinner';
+      const spinnerMsg = document.createElement('div');
+      spinnerMsg.className = 'spinner-message';
+      spinnerMsg.id = 'spinner-message';
+      spinnerMsg.textContent = 'Suggesting courses…';
+      const spinnerWrap = document.createElement('div');
+      spinnerWrap.style.display = 'flex';
+      spinnerWrap.style.flexDirection = 'column';
+      spinnerWrap.style.alignItems = 'center';
+      spinnerWrap.appendChild(spinner);
+      spinnerWrap.appendChild(spinnerMsg);
+      subjectsListDiv.parentNode.insertBefore(spinnerWrap, subjectsListDiv.nextSibling.nextSibling);
+      function updateSummary() {
+        const checked = Array.from(document.querySelectorAll('.subject-item input[type=checkbox]:checked'));
+        if (checked.length === 0) {
+          summaryDiv.style.display = 'none';
+          summaryDiv.innerHTML = '';
+          return;
+        }
+        const summary = checked.map(cb => {
+          const subjId = cb.id.replace('cb_', '');
+          const label = document.querySelector(`label[for='cb_${subjId}']`).childNodes[0].textContent;
+          const grade = document.getElementById(`grade_${subjId}`).value;
+          return `${label}: <strong>${grade || '-'}</strong>`;
+        });
+        summaryDiv.innerHTML = `<strong>Selected Subjects & Grades:</strong><br>${summary.join(', ')}`;
+        summaryDiv.style.display = 'block';
+      }
+
+      function autoSuggestCourses() {
+        // Build studentGrades from checked subjects
+        const studentGrades = {};
+        window.groupedSubjects.forEach(group => {
+          group.subjects.forEach(subj => {
+            const cb = document.getElementById(`cb_${subj.id}`);
+            const sel = document.getElementById(`grade_${subj.id}`);
+            if (cb && cb.checked && sel && sel.value) {
+              studentGrades[subj.id] = sel.value;
+            }
+          });
+        });
+        // New KCSE grading: Math (compulsory), best of English/Kiswahili/KSL, next best 5
+        const selectedSubjects = Object.keys(studentGrades);
+        const resultsDiv = document.getElementById('results');
+        if (!selectedSubjects.includes('math')) {
+          resultsDiv.style.display = 'block';
+          resultsDiv.innerHTML = '<div class="no-match">Mathematics is compulsory. Please select and grade Mathematics.</div>';
+          return;
+        }
+        const languageSubjects = ['english', 'kiswahili', 'ksl'];
+        const availableLangs = languageSubjects.filter(s => selectedSubjects.includes(s));
+        if (availableLangs.length === 0) {
+          resultsDiv.style.display = 'block';
+          resultsDiv.innerHTML = '<div class="no-match">Please select and grade at least one language: English, Kiswahili, or KSL.</div>';
+          return;
+        }
+        // Always use Math
+        const usedSubjects = ['math'];
+        // Use best language
+        let bestLang = availableLangs[0];
+        let bestLangValue = gradeValue(studentGrades[bestLang]);
+        availableLangs.forEach(s => {
+          if (gradeValue(studentGrades[s]) > bestLangValue) {
+            bestLang = s;
+            bestLangValue = gradeValue(studentGrades[s]);
+          }
+        });
+        usedSubjects.push(bestLang);
+        // Get next best 5 subjects
+        const otherSubjects = selectedSubjects.filter(s => !usedSubjects.includes(s));
+        const bestOthers = otherSubjects
+          .map(s => ({ subject: s, value: gradeValue(studentGrades[s]) }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 5);
+        bestOthers.forEach(o => usedSubjects.push(o.subject));
+        // If less than 7, show error
+        if (usedSubjects.length < 7) {
+          resultsDiv.style.display = 'block';
+          resultsDiv.innerHTML = '<div class="no-match">Please select and grade at least 7 subjects (including Mathematics and a language).</div>';
+          return;
+        }
+        // Show spinner
+        document.getElementById('spinner').style.display = 'block';
+        document.getElementById('spinner-message').style.display = 'block';
+        // Scroll to results
+        setTimeout(() => {
+          const resultsDiv = document.getElementById('results');
+          resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 100);
+        setTimeout(() => {
+          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('spinner-message').style.display = 'none';
+          // Calculate total points and mean grade
+          const totalPoints = usedSubjects.reduce((sum, s) => sum + gradeValue(studentGrades[s]), 0);
+          const meanPoints = totalPoints / 7;
+          // Map mean points to KCSE mean grade
+          const kcseMeanGrades = [
+            { min: 11.5, grade: 'A' },
+            { min: 10.5, grade: 'A-' },
+            { min: 9.5, grade: 'B+' },
+            { min: 8.5, grade: 'B' },
+            { min: 7.5, grade: 'B-' },
+            { min: 6.5, grade: 'C+' },
+            { min: 5.5, grade: 'C' },
+            { min: 4.5, grade: 'C-' },
+            { min: 3.5, grade: 'D+' },
+            { min: 2.5, grade: 'D' },
+            { min: 1.5, grade: 'D-' },
+            { min: 0, grade: 'E' }
+          ];
+          const meanGrade = kcseMeanGrades.find(g => meanPoints >= g.min).grade;
+          // Find eligible courses and calculate cluster points (using only the 7 used subjects)
+          const eligible = courses.map(course => {
+            let passed = true;
+            let courseUsedSubjects = [];
+            if (course.required && course.required.length > 0) {
+              for (const req of course.required) {
+                if (req.either) {
+                  const ok = req.subjects.some(s => usedSubjects.includes(s) && gradeValue(studentGrades[s]) >= gradeValue(req.min));
+                  if (!ok) passed = false;
+                  else courseUsedSubjects.push(req.subjects.find(s => usedSubjects.includes(s) && gradeValue(studentGrades[s]) >= gradeValue(req.min)));
+                } else {
+                  for (const s of req.subjects) {
+                    if (!usedSubjects.includes(s) || gradeValue(studentGrades[s]) < gradeValue(req.min)) passed = false;
+                    else courseUsedSubjects.push(s);
+                  }
+                }
+              }
+            }
+            if (passed && course.mean) {
+              const mean = usedSubjects.map(s => gradeValue(studentGrades[s])).reduce((a, b) => a + b, 0) / 7;
+              if (mean < gradeValue(course.mean)) passed = false;
+            }
+            if (!passed) return null;
+            return { name: course.name, totalPoints };
+          }).filter(Boolean);
+          // Display results
+          resultsDiv.style.display = 'block';
+          resultsDiv.innerHTML = `<div style="margin-bottom:10px;"><strong>Total Points:</strong> ${totalPoints} &nbsp; <strong>Mean Grade:</strong> ${meanGrade}</div>`;
+          if (eligible.length === 0) {
+            resultsDiv.innerHTML += '<div class="no-match">No matching courses found. Try improving your grades or check for more options.</div>';
+          } else {
+            // Collapsible results
+            resultsDiv.innerHTML += `<button class="collapsible">Show/Hide Suggested Courses (${eligible.length})</button><div class="collapsible-content">` +
+              eligible.map(c => `<div class="course">${c.name} <br><small>Cluster Points: ${c.totalPoints}</small></div>`).join('') + '</div>';
+            // Collapsible logic
+            const coll = resultsDiv.querySelector('.collapsible');
+            const content = resultsDiv.querySelector('.collapsible-content');
+            coll.addEventListener('click', function() {
+              content.style.display = content.style.display === 'block' ? 'none' : 'block';
+            });
+            // Open by default
+            content.style.display = 'block';
+          }
+        }, 700);
+      }
+
+      // Attach autoSuggestCourses to all relevant events
+      window.groupedSubjects.forEach(group => {
+        group.subjects.forEach(subj => {
+          const cb = document.getElementById(`cb_${subj.id}`);
+          const sel = document.getElementById(`grade_${subj.id}`);
+          if (cb) cb.addEventListener('change', autoSuggestCourses);
+          if (sel) sel.addEventListener('change', autoSuggestCourses);
+        });
+      });
+
+      // Back to Top button
+      const backToTop = document.createElement('button');
+      backToTop.className = 'back-to-top';
+      backToTop.innerHTML = '↑';
+      backToTop.title = 'Back to Top';
+      document.body.appendChild(backToTop);
+      backToTop.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 300) backToTop.style.display = 'flex';
+        else backToTop.style.display = 'none';
+      });
+    }
+  </script>
+</body>
+</html> 
